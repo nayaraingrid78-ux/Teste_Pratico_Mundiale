@@ -1,0 +1,38 @@
+Qualificação mais rigorosa dos clientes engajados
+
+O aumento do volume de engajamento acompanhado por queda na taxa de conversão indica, em geral, um problema de qualidade dos leads. É fundamental revisar os critérios que definem um cliente como engajado e implementar mecanismos de priorização, como lead scoring baseado em perfil, comportamento e histórico de interação. Dessa forma, o time comercial passa a atuar sobre oportunidades com maior probabilidade de conversão. Conversar com as areas para identificar o perfil ideal de compra seria interessante para realizarem esse mapeamento e incluir no bot.
+
+Redução do tempo de resposta comercial
+
+O tempo entre o engajamento e o primeiro contato comercial é um fator crítico para conversão. Boas práticas incluem a definição de SLAs claros, automação de alertas para leads engajados e distribuição automática de oportunidades no CRM. A redução do tempo de resposta tende a gerar ganhos diretos na taxa de conversão sem necessidade de aumento de volume.
+
+Alinhamento entre marketing e vendas
+
+Crescimento no topo do funil sem aumento proporcional em vendas costuma indicar desalinhamento entre as áreas. É importante alinhar o conceito de cliente engajado qualificado, revisar as mensagens e expectativas geradas ao longo do funil e promover rituais de feedback sobre oportunidades perdidas. Esse alinhamento reduz atritos e melhora a eficiência da conversão.
+
+ Padronização do processo comercial
+
+A ausência de um processo de venda bem definido gera variação excessiva de resultados. A adoção de playbooks comerciais, roteiros de diagnóstico e padronização do tratamento de objeções contribui para uma conversão mais previsível e consistente entre diferentes períodos e responsáveis.
+
+Análise estruturada das perdas no funil
+
+Mapear e classificar os motivos de perda no CRM permite identificar gargalos específicos do processo. A análise por período, canal ou perfil de cliente viabiliza ações corretivas mais precisas, substituindo iniciativas genéricas por melhorias orientadas por dados. Uma forma e a equipe de dados utilizar uma query que pega os campos que nao estao padronizados, padronizando esses valores e conseguindo identificar o volume de forma cheia. Uma sugestao baseada no banco de dados seria utilizar essa query:
+
+```sql
+
+select
+CASE
+WHEN motivo_reprovacao LIKE '%VIABILIDADE%' OR motivo_reprovacao like '%DISPONIBILIDADE%' THEN 'PROBLEMA COM VIABILIDADE'
+when motivo_reprovacao LIKE '%PENDENCIA%' OR motivo_reprovacao like '%PENDÊNCIA%'  THEN 'PROBLEMA COM PENDENCIA'
+ELSE motivo_reprovacao
+END motivo_reprovacao_normalizado, count (*) as contagem_total
+from sales
+where motivo_reprovacao  NOT LIKE '%TESTE%' AND motivo_reprovacao not like '%APROVADA%'
+GROUP BY motivo_reprovacao_normalizado
+Order by   count (*) desc
+```
+
+
+Mapeamento da jornada do cliente
+
+Compreender de forma detalhada a jornada do cliente desde o engajamento até a venda permite identificar pontos de fricção, lacunas de informação e momentos de abandono. O mapeamento da jornada possibilita ajustes na comunicação, no timing das interações e na proposta de valor apresentada em cada etapa, aumentando a probabilidade de conversão. 
