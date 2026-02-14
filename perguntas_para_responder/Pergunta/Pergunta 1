@@ -52,7 +52,7 @@ JOIN engaged_ago ea
 JOIN sales_ago sa
   ON ea.engaged_key = sa.engaged_key;
 
-
+'''
 Nessa query, o objetivo foi analisar e consolidar os motivos de reprovação das vendas, agrupando variações de texto semelhantes em categorias padronizadas para facilitar a leitura e a análise dos dados.
 
 Para isso, foi utilizado um CASE WHEN para normalizar o campo motivo_reprovacao, agrupando diferentes descrições que representam o mesmo problema de negócio. Motivos que continham os termos “VIABILIDADE” ou “DISPONIBILIDADE” foram classificados como “PROBLEMA COM VIABILIDADE”, enquanto aqueles que continham “PENDENCIA” ou “PENDÊNCIA” foram agrupados como “PROBLEMA COM PENDENCIA”. Os demais motivos foram mantidos com a descrição original.
