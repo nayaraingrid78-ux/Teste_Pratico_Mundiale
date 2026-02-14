@@ -1,0 +1,104 @@
+
+A query teve como objetivo analisar a taxa de conversão dos clientes engajados em vendas nos meses de julho e agosto. Para isso, foram consolidados, por meio de CTEs, os totais de clientes engajados e de vendas realizadas em cada período, permitindo o cálculo das taxas em uma única consulta. A utilização de uma chave artificial possibilitou a comparação direta dos indicadores em uma única linha, garantindo clareza e organização da análise.
+
+Com os dados consolidados, a taxa de conversão foi calculada como a razão entre vendas realizadas e clientes engajados. Os resultados mostraram uma taxa de 26,32% em julho e 24,84% em agosto, indicando desempenho abaixo do esperado em ambos os meses e uma queda de 1,48 ponto percentual na conversão de julho para agosto.
+
+''' sql
+WITH engaged_jul AS (
+  SELECT 
+    'key' AS engaged_key, 
+    CAST(COUNT(DISTINCT contact_origin) AS FLOAT) AS cont_engaged_jul
+  FROM engaged_tickets
+  WHERE DATE(dt_criacao) BETWEEN '2023-07-01' AND '2023-07-31'
+    AND id_operation = 1070
+),
+sales_jul AS (
+  SELECT
+    'key' AS engaged_key, 
+    COUNT(id_sale) AS cont_sales_jul
+  FROM sales
+  WHERE DATE(sale_created_at) BETWEEN '2023-07-01' AND '2023-07-31'
+    AND id_operation = 1070
+),
+engaged_ago AS (
+  SELECT 
+    'key' AS engaged_key, 
+    CAST(COUNT(DISTINCT contact_origin) AS FLOAT) AS cont_engaged_ago
+  FROM engaged_tickets
+  WHERE DATE(dt_criacao) BETWEEN '2023-08-01' AND '2023-08-31'
+    AND id_operation = 1070
+),
+sales_ago AS (
+  SELECT
+    'key' AS engaged_key, 
+    COUNT(id_sale) AS cont_sales_ago
+  FROM sales
+  WHERE DATE(sale_created_at) BETWEEN '2023-08-01' AND '2023-08-31'
+    AND id_operation = 1070
+)
+
+SELECT 
+  e.cont_engaged_jul,
+  s.cont_sales_jul,
+  ea.cont_engaged_ago,
+  sa.cont_sales_ago,
+  ROUND((s.cont_sales_jul / e.cont_engaged_jul) * 100, 2) AS taxa_engajamento_sobre_vendas_jul,
+  ROUND((sa.cont_sales_ago / ea.cont_engaged_ago) * 100, 2) AS taxa_engajamento_sobre_vendas_ago
+FROM engaged_jul e
+JOIN sales_jul s
+  ON e.engaged_key = s.engaged_key
+JOIN engaged_ago ea
+  ON e.engaged_key = ea.engaged_key
+JOIN sales_ago sa
+  ON ea.engaged_key = sa.engaged_key;
+
+
+Nessa query, o objetivo foi analisar e consolidar os motivos de reprovação das vendas, agrupando variações de texto semelhantes em categorias padronizadas para facilitar a leitura e a análise dos dados.
+
+Para isso, foi utilizado um CASE WHEN para normalizar o campo motivo_reprovacao, agrupando diferentes descrições que representam o mesmo problema de negócio. Motivos que continham os termos “VIABILIDADE” ou “DISPONIBILIDADE” foram classificados como “PROBLEMA COM VIABILIDADE”, enquanto aqueles que continham “PENDENCIA” ou “PENDÊNCIA” foram agrupados como “PROBLEMA COM PENDENCIA”. Os demais motivos foram mantidos com a descrição original.
+
+No filtro WHERE, foram excluídos registros relacionados a testes e vendas aprovadas, garantindo que a análise considerasse apenas casos reais de reprovação. Em seguida, os dados foram agrupados pelo motivo de reprovação normalizado e contabilizados, permitindo identificar quais categorias concentraram o maior volume de reprovações.
+
+Por fim, o resultado foi ordenado pela quantidade de ocorrências em ordem decrescente, destacando os principais motivos de reprovação e fornecendo uma visão clara dos gargalos que impactam diretamente a conversão de vendas.
+
+
+
+```sql
+select
+    CASE
+        WHEN motivo_reprovacao LIKE '%VIABILIDADE%' OR motivo_reprovacao like '%DISPONIBILIDADE%' THEN 'PROBLEMA COM VIABILIDADE'
+        when motivo_reprovacao LIKE '%PENDENCIA%' OR motivo_reprovacao like '%PENDÊNCIA%'  THEN 'PROBLEMA COM PENDENCIA'
+        ELSE motivo_reprovacao
+    END motivo_reprovacao_normalizado, 
+    count(*)
+from sales
+where motivo_reprovacao  NOT LIKE '%TESTE%' AND motivo_reprovacao not like '%APROVADA%'
+GROUP BY motivo_reprovacao_normalizado
+Order by 2 desc
+```
+
+---
+
+Hipótese 1: Falha na qualificação inicial dos leads no chatbot
+
+O aumento de pendências de pagamento no fundo do funil indica que leads fora do ICP estão avançando pelas etapas iniciais do chatbot. A ausência de filtros mais rigorosos de qualificação permite que usuários com restrições técnicas, financeiras ou de elegibilidade avancem até etapas finais, onde identificam limitações e acabam abandonando a compra ou não aprovando o pedido.
+
+Hipótese 2: Fricção no momento de fechamento da compra
+
+Embora o chatbot conduza eficientemente o usuário até etapas avançadas, há indícios de fricção no fechamento da venda. Limitações nos meios de pagamento, falta de clareza nas instruções ou dificuldades na etapa de confirmação contribuem para o aumento de reprovações por pendência, especialmente entre clientes que demonstraram intenção de compra ao longo da jornada.
+
+Hipótese 3: Identificação tardia de problemas de viabilidade
+
+Uma parcela relevante dos clientes só tem seus critérios de viabilidade avaliados após o engajamento inicial. Essa validação tardia inflaciona o volume de leads engajados, mas reduz a conversão efetiva em vendas, uma vez que restrições técnicas, regionais ou de elegibilidade são identificadas apenas em etapas avançadas do funil.
+
+Hipótese 4: Complexidade operacional do formulário no fluxo automatizado
+
+O formulário enviado por e-mail marketing apresenta alto potencial de fricção devido à sua complexidade. Formulários extensos ou pouco intuitivos aumentam a taxa de abandono e geram pendência de documentos, especialmente em fluxos automatizados sem suporte imediato, dificultando a conclusão da compra mesmo para clientes com real intenção de conversão.
+
+
+
+
+
+
+
+
