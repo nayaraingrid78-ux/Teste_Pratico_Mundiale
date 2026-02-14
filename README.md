@@ -1,7 +1,7 @@
 # Teste Pratico Mundiale
 Este repositório contém a análise de performance da operação 1070, comparando os períodos de julho e agosto, com foco nos indicadores do funil de vendas, utilizando consultas SQL e análise interpretativa dos dados a partir da base de dados em SQLite.
 
-## 📂 Estrutura do Repositório
+## Estrutura do Repositório
 
 ```text
 Teste_Pratico_Mundiale/
@@ -18,7 +18,7 @@ Teste_Pratico_Mundiale/
 │   └── pergunta_4.md
 ````
 
-## 📊 Pasta `sql/`
+## Pasta `sql/`
 
 Nesta pasta estão as queries SQL utilizadas para construção dos dados do funil.
 
@@ -38,7 +38,7 @@ Nesta pasta estão as queries SQL utilizadas para construção dos dados do funi
 
 ---
 
-## 📝 Pasta `perguntas_para_responder/`
+## Pasta `perguntas_para_responder/`
 
 Contém a análise conceitual e interpretativa baseada nos dados extraídos via SQL.
 
@@ -53,7 +53,7 @@ Com base nos dados do banco de dados, foi realizada a comparação da performanc
 
 ---
 
-## 🔍 Conceitos do Funil
+##  Conceitos do Funil
 
 Os conceitos utilizados ao longo das análises seguem as definições abaixo:
 
@@ -77,7 +77,7 @@ Os conceitos utilizados ao longo das análises seguem as definições abaixo:
 
 ---
 
-## 🎯 Objetivo da Análise
+## Objetivo da Análise
 
 * Avaliar a eficiência do funil de vendas automatizado.
 * Identificar gargalos de conversão.
@@ -86,7 +86,7 @@ Os conceitos utilizados ao longo das análises seguem as definições abaixo:
 
 ---
 
-## 🛠️ Tecnologias + Conhecimentos Utilizados
+## Tecnologias + Conhecimentos Utilizados
 
 * SQL
 * Análise de funil e métricas de conversão
