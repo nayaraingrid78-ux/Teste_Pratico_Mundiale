@@ -1,0 +1,67 @@
+A query teve como objetivo identificar as vendas convertidas pelo chatbot e pelo atendimento humano. Para isso, foi realizada a contagem dos atendimentos finalizados por BOT e por ATH, agrupando os resultados pela coluna step, que indica o assunto tratado em cada interação. Como critério de conversão, foi considerada a etapa “PEDIDO CONCLUÍDO”, entendida como venda efetivada, restringindo a análise à operação 1070 e ao período entre julho e agosto de 2023. A condição referente ao step foi incluida entre parênteses utilizando o operador OR, uma vez que o operador AND possui maior precedência lógica. Sem essa estrutura, os filtros de data e operação não seriam aplicados corretamente, comprometendo o resultado da análise.
+
+Os resultados indicaram que, do total de 95 vendas concluídas no período analisado, 91,05% foram finalizadas pelo chatbot, enquanto apenas 8,43% foram finalizadas pelo atendimento humano, evidenciando uma taxa de conversão significativamente superior atribuída ao BOT.
+
+SELECT
+    finalizado_por,
+    step,
+    COUNT(*) AS total
+FROM engaged_tickets
+WHERE
+    (
+        step = 'PEDIDO CONCLUÍDO'
+        OR step LIKE '%CONCLUÍDO%'
+    )
+    AND id_operation = 1070
+    AND dt_criacao BETWEEN DATE('2023-07-01') AND DATE('2023-08-31')
+GROUP BY
+    finalizado_por,
+    step;
+
+A diferença de performance pode ser explicada por fatores relacionados à experiência do cliente e à operação do funil. O chatbot atua com um fluxo estruturado e orientado à conclusão, reduzindo fricções como tempo de espera, filas e transferências, o que contribui para menor abandono e maior eficiência na conversão. Além disso, clientes que avançam no fluxo automatizado tendem a apresentar maior intenção de compra, enquanto o atendimento humano concentra demandas mais exploratórias.
+
+A transição entre BOT e ATH também é um ponto crítico. Fluxos automatizados extensos ou o não cumprimento de SLA podem gerar desgaste antes do contato humano, aumentando a probabilidade de abandono. Assim, a diferença de performance observada está mais associada a falhas de jornada, alinhamento e tempo de resposta do que à capacidade individual do atendimento humano.
+
+A query teve como objetivo calcular a quantidade de abandonos do chat conduzidos pelo chatbot e pelo atendimento humano. Para isso, foram construídas duas tabelas temporárias por meio de CTEs, uma dedicada aos abandonos ocorridos em atendimentos finalizados pelo BOT e outra aos abandonos ocorridos em atendimentos finalizados pelo ATH. Em cada CTE, foi utilizada a estrutura CASE WHEN para somar a quantidade de clientes que abandonaram o chat em sua respectiva modalidade de atendimento.
+
+Como os campos de etapa não estão padronizados, foi utilizada a função LIKE em conjunto com o operador % para identificar a ocorrência da palavra “abandono” em qualquer posição da string presente na coluna step, garantindo a extração completa dos registros relacionados a esse tipo de evento.
+
+Os resultados indicaram que houve uma taxa significativamente maior de abandonos em chats conduzidos pelo atendimento humano, reforçando a hipótese levantada anteriormente. Do total de 67 abandonos registrados na operação 1070 entre os meses de julho e agosto, 98,58% ocorreram em atendimentos finalizados pelo ATH, enquanto apenas uma parcela residual esteve associada ao chatbot.
+
+Além das hipóteses já apresentadas, outro fator que pode contribuir para o aumento de abandono no atendimento humano é a necessidade de recontextualização do atendimento, em que o cliente precisa repetir informações já fornecidas ao BOT. Esse retrabalho aumenta o tempo de resolução e gera frustração, elevando a probabilidade de abandono antes da conclusão do atendimento.
+
+```sql
+WITH aband_bot AS (
+SELECT
+'id_bot_ath' AS id_btath,
+SUM(
+CASE
+WHEN step LIKE '%abandono%' THEN 1
+ELSE 0
+END
+) AS abandono_bot
+FROM engaged_tickets
+WHERE finalizado_por = 'BOT'
+AND id_operation = 1070 AND dt_criacao between date('2023-07-01') and date('2023-08-31')
+),
+aband_ath AS (
+SELECT
+'id_bot_ath' AS id_btath,
+SUM(
+CASE
+WHEN step LIKE '%abandono%' THEN 1
+ELSE 0
+END
+) AS abandono_ath
+FROM engaged_tickets
+WHERE finalizado_por = 'ATH'
+AND id_operation = 1070 AND dt_criacao between date('2023-07-01') and date('2023-08-31')
+)
+
+SELECT
+a.abandono_ath,
+b.abandono_bot
+FROM aband_ath a
+JOIN aband_bot b
+ON a.id_btath = b.id_btath;
+```
