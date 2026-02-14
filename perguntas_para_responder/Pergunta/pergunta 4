@@ -1,0 +1,82 @@
+Conforme as queries apresentadas, seguem sugestões de melhorias em cada etapa do funil com o objetivo de aumentar a conversão de vendas:
+
+Qualificação antecipada de leads no topo do funil, utilizando critérios claros de ICP e perguntas eliminatórias.
+
+Validação precoce de viabilidade, evitando que leads fora do perfil avancem desnecessariamente pela jornada.
+
+Simplificação dos formulários, com redução do número de campos e adoção de preenchimento progressivo.
+
+Separação clara de fluxos no chatbot, distinguindo atendimentos de suporte, vendas e pós-venda.
+
+Estruturação adequada do handoff entre BOT e atendimento humano, reduzindo fricções na transição de canais.
+
+4.1 Topo do funil
+
+No topo do funil, é recomendável refinar as perguntas iniciais do chatbot para melhor identificação da intenção do cliente, aplicar critérios de ICP já no primeiro contato e direcionar automaticamente solicitações de suporte para fluxos específicos. Essas ações reduzem a entrada de leads desqualificados nas etapas seguintes.
+
+4.2 Meio do funil
+
+No meio do funil, é importante antecipar a validação de viabilidade técnica e comercial, tornar as mensagens mais objetivas e claras e reduzir o número de etapas necessárias para o avanço no fluxo. Essas melhorias contribuem para a diminuição de fricções e abandono durante a jornada.
+
+4.3 Fundo do funil
+
+No fundo do funil, recomenda-se simplificar o processo de pagamento, reduzir a complexidade e a quantidade de campos nos formulários, disponibilizar suporte humano imediato em pontos críticos de abandono e criar alertas automáticos para casos de pendência antes do abandono definitivo.
+
+A query apresentada teve como objetivo calcular a taxa de vendas aprovadas sobre o total de vendas, permitindo a comparação entre os meses de julho e agosto na operação 1070. Os resultados indicaram que, em julho, 39,84% das vendas foram aprovadas, enquanto em agosto essa taxa foi de 34,87%, evidenciando uma queda de 4,97 pontos percentuais de um mês para o outro.
+
+```sql
+WITH approved_jul AS (
+  SELECT 
+    'key' AS approved_key,
+    CAST(COUNT(id_sale) AS FLOAT) AS cont_approved_jul
+  FROM sales
+  WHERE DATE(sale_created_at) BETWEEN '2023-07-01' AND '2023-07-31'
+    AND id_operation = 1070
+    AND status_venda = 'APROVADA'
+),
+sales_jul AS (
+  SELECT
+    'key' AS approved_key, 
+    COUNT(id_sale) AS cont_sales_jul
+  FROM sales
+  WHERE DATE(sale_created_at) BETWEEN '2023-07-01' AND '2023-07-31'
+    AND id_operation = 1070
+),
+
+approved_ago AS (
+  SELECT 
+    'key' AS approved_key, 
+    CAST(COUNT(id_sale) AS FLOAT) AS contap_ago
+  FROM sales
+  WHERE DATE(sale_created_at) BETWEEN '2023-08-01' AND '2023-08-31' 
+    AND id_operation = 1070 AND status_venda = 'APROVADA'
+)
+,
+sales_ago AS (
+  SELECT
+    'key' AS approved_key, 
+    COUNT(id_sale) AS cont_sales_ago
+  FROM sales
+  WHERE DATE(sale_created_at) BETWEEN '2023-08-01' AND '2023-08-31'
+    AND id_operation = 1070
+)
+
+SELECT 
+apjul.cont_approved_jul, 
+sjul.cont_sales_jul, 
+apgo.contap_ago, 
+sago.cont_sales_ago,
+ROUND((cont_approved_jul / sjul.cont_sales_jul) * 100, 2) AS taxa_aprovado_sob_vendas_jul,
+ROUND((apgo.contap_ago / sago.cont_sales_ago) * 100, 2) AS taxa_aprovado_sob_vendas_ago
+
+FROM approved_jul apjul
+JOIN sales_jul sjul
+  ON apjul.approved_key = sjul.approved_key
+JOIN approved_ago apgo
+  ON apjul.approved_key = apgo.approved_key
+JOIN sales_ago sago
+  ON apjul.approved_key = sago.approved_key;
+```
+
+
+Outro ponto relevante a ser destacado é que, além da queda observada entre os meses, a taxa de vendas aprovadas apresentou-se globalmente baixa em ambos os períodos analisados. Esse comportamento pode indicar uma falha no próprio fluxo de conversão, especialmente no chatbot, que pode estar classificando como venda interações que ainda não representam uma conversão efetiva ou que não avançam para aprovação final. Esse cenário reforça a necessidade de revisar os critérios de definição de venda, os pontos de validação no funil e o alinhamento entre chatbot, operação comercial e regras de aprovação.
